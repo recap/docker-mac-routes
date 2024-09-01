@@ -9,11 +9,37 @@ fi
 # Check if Docker Desktop is running
 docker ps > /dev/null
 if [ $? -ne 0 ]; then
+  echo "Error with finding local Docker. Make sure Docker cli and Docker desktop are installed."
   exit 1
 fi
 
-# Get IP of eth1 from BusyBox container with NET_ADMIN privileges
+# Check if kernelForUDP is set in settings.json. 
+SETTINGS_FILE=$(echo ~/Library/Group\ Containers/group.com.docker/settings.json)
+IS_SET=$(cat "$SETTINGS_FILE" | grep kernelForUDP | awk '{print $2}')
+if [[ $IS_SET == "false," ]]; then
+  echo "kernelForUDP is not set, it is needed for this to work."
+  echo "You can enable it manually from Docker Desktop GUI."
+  echo "This is done from Settings(top right)->Resources->Network."
+  echo "Enable 'Use kernel networking for UDP' in Docker Desktop."
+  echo "Or we do it here."
+  read -p "Do you want to set kernelForUDP to true and restart Docker Desktop? (y/n): " CHOICE
 
+  if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
+    echo Updating settings file: "$SETTINGS_FILE".
+    sed -i '' 's/"kernelForUDP": false/"kernelForUDP": true/' "$SETTINGS_FILE"
+    echo "Restarting Docker Desktop..."
+    ps aux | grep -i docker | grep -v grep | grep -v docker-mac- | awk '{print $2}' | xargs kill -9
+    sleep 1
+    open -a Docker
+    sleep 2
+  else
+    echo "Exiting..."
+    continue
+  fi
+
+fi
+
+# Get IP of eth1 from BusyBox container with NET_ADMIN privileges
 # Define the Docker command to get the IP address of eth1
 DOCKER_COMMAND="ip addr show eth1 | grep 'inet ' | awk '{print \$2}' | cut -d/ -f1"
 
