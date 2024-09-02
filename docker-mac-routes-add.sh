@@ -104,7 +104,7 @@ for NETWORK_ID in $NETWORKS; do
         ROUTE_INTERFACE=$(echo "$ROUTE_INFO" | grep interface: | awk '{print $2}')
         echo "Route for subnet $SUBNET already exists:"
         echo "  subnet: $SUBNET gateway: $ROUTE_GATEWAY interface: $ROUTE_INTERFACE"
-        # Check if the route to Docker VM already esists
+        # Check if the route to Docker VM already exists
         if [ "$ROUTE_GATEWAY" == "$IP_ADDRESS" ]; then
           echo "Skipping."
           continue
