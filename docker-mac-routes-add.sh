@@ -38,7 +38,7 @@ if [[ $IS_SET == "false," ]]; then
   if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
     echo Updating settings file: "$SETTINGS_FILE".
     sed -i '' 's/"kernelForUDP": false/"kernelForUDP": true/' "$SETTINGS_FILE"
-    read -p "Please restart Docker Desktop; done? (y/n): " CHOICE
+    read -p "Please shutdown Docker Desktop and restart (Not Restart) for settings to take effect; done? (y/n): " CHOICE
     if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
       echo "Continuing..."
     else
@@ -49,7 +49,6 @@ if [[ $IS_SET == "false," ]]; then
     echo "Exiting..."
     exit 0
   fi
-
 fi
 
 # Get IP of eth1 from BusyBox container with NET_ADMIN privileges
