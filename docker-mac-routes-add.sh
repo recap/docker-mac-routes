@@ -1,15 +1,18 @@
 #!/bin/bash
 
+
 # Check if the script is running on macOS
 if [[ "$(uname)" != "Darwin" ]]; then
   echo "This script is intended to run on macOS only."
   exit 1
 fi
 
+echo "This tool supports Docker Desktop versions >= 4.26"
+
 # Check if Docker Desktop is running
 docker ps > /dev/null
 if [ $? -ne 0 ]; then
-  echo "Error with finding local Docker. Make sure Docker cli and Docker desktop are installed."
+  echo "Error with finding local Docker. Make sure Docker cli and Docker Desktop are installed."
   exit 1
 fi
 
