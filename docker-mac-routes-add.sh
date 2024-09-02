@@ -15,6 +15,14 @@ fi
 
 # Check if kernelForUDP is set in settings.json. 
 SETTINGS_FILE=$(echo ~/Library/Group\ Containers/group.com.docker/settings.json)
+if [[ -f "$SETTINGS_FILE" ]]; then
+  echo "Checking for kernelForUDP flag in $SETTINGS_FILE."
+else
+  echo "Could not find file $SETTINGS_FILE."
+  echo "This file is needed to check for kernelForUDP flag."
+  exit 1
+fi
+
 IS_SET=$(cat "$SETTINGS_FILE" | grep kernelForUDP | awk '{print $2}')
 if [[ $IS_SET == "false," ]]; then
   echo "kernelForUDP is not set, it is needed for this to work."
@@ -22,19 +30,21 @@ if [[ $IS_SET == "false," ]]; then
   echo "This is done from Settings(top right)->Resources->Network."
   echo "Enable 'Use kernel networking for UDP' in Docker Desktop."
   echo "Or we do it here."
-  read -p "Do you want to set kernelForUDP to true and restart Docker Desktop? (y/n): " CHOICE
+  read -p "Do you want to set kernelForUDP to true? (y/n): " CHOICE
 
   if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
     echo Updating settings file: "$SETTINGS_FILE".
     sed -i '' 's/"kernelForUDP": false/"kernelForUDP": true/' "$SETTINGS_FILE"
-    echo "Restarting Docker Desktop..."
-    ps aux | grep -i docker | grep -v grep | grep -v docker-mac- | awk '{print $2}' | xargs kill -9
-    sleep 1
-    open -a Docker
-    sleep 2
+    read -p "Please restart Docker Desktop; done? (y/n): " CHOICE
+    if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
+      echo "Continuing..."
+    else
+      echo "Exiting..."
+      exit 0
+    fi
   else
     echo "Exiting..."
-    continue
+    exit 0
   fi
 
 fi
@@ -103,7 +113,7 @@ for NETWORK_ID in $NETWORKS; do
 
         if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
           # Remove the existing route
-          echo "Removing existing route for subnet $SUBNET..."
+          echo "[NEED SUDO RIGHTS] Removing existing route for subnet $SUBNET..."
           sudo route -n delete -net $SUBNET
         else
           echo "Skipping route addition for subnet $SUBNET."
@@ -112,7 +122,7 @@ for NETWORK_ID in $NETWORKS; do
       fi
 
       # Add the new route for the subnet to the IP_ADDRESS
-      echo "Adding route to subnet $SUBNET via $IP_ADDRESS..."
+      echo "[NEED SUDO RIGHTS] Adding route to subnet $SUBNET via $IP_ADDRESS..."
       sudo route -n add -net $SUBNET $IP_ADDRESS
     done
   else
