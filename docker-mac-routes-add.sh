@@ -1,9 +1,10 @@
 #!/bin/bash
 
+echoerr() { echo "ERROR: $@" 1>&2; }
 
 # Check if the script is running on macOS
 if [[ "$(uname)" != "Darwin" ]]; then
-  echo "This script is intended to run on macOS only."
+  echoerr "This script is intended to run on macOS only."
   exit 1
 fi
 
@@ -12,28 +13,10 @@ echo "This tool supports Docker Desktop versions >= 4.26"
 # Check if Docker Desktop is running
 docker ps > /dev/null
 if [ $? -ne 0 ]; then
-  echo "Error with finding local Docker. Make sure Docker cli and Docker Desktop are installed."
+  echoerr "Error with finding local Docker. Make sure Docker cli and Docker Desktop are installed."
   exit 1
 fi
 
-# Check if kernelForUDP is set in settings.json. 
-SETTINGS_FILE=$(echo ~/Library/Group\ Containers/group.com.docker/settings.json)
-if [[ -f "$SETTINGS_FILE" ]]; then
-  echo "Checking for kernelForUDP flag in $SETTINGS_FILE."
-else
-  echo "Could not find file $SETTINGS_FILE."
-  echo "This file is needed to check for kernelForUDP flag."
-  exit 1
-fi
-
-IS_SET=$(cat "$SETTINGS_FILE" | grep kernelForUDP | awk '{print $2}')
-if [[ $IS_SET == "false," ]]; then
-  echo "kernelForUDP is not set, it is needed for this to work."
-  echo "You can enable it manually from Docker Desktop GUI."
-  echo "This is done from Settings(top right)->Resources->Network."
-  echo "Enable 'Use kernel networking for UDP' in Docker Desktop."
-  exit 1
-fi
 
 # Get IP of eth1 from BusyBox container with NET_ADMIN privileges
 # Define the Docker command to get the IP address of eth1
@@ -51,7 +34,11 @@ IP_ADDRESS=$(docker run --rm --network host --cap-add NET_ADMIN busybox:latest s
 if [ -n "$IP_ADDRESS" ]; then
   echo "IP address of eth1: $IP_ADDRESS"
 else
-  echo "Failed to retrieve IP address of eth1."
+  echoerr "Failed to retrieve IP address of eth1."
+  echoerr "Make sure kernelForUDP is set, it is needed for this to work."
+  echoerr "You can enable it manually from Docker Desktop GUI."
+  echoerr "This is done from Settings(top right)->Resources->Network."
+  echoerr "Enable 'Use kernel networking for UDP' in Docker Desktop."
   exit 1
 fi
 
