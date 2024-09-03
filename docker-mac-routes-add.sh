@@ -32,23 +32,7 @@ if [[ $IS_SET == "false," ]]; then
   echo "You can enable it manually from Docker Desktop GUI."
   echo "This is done from Settings(top right)->Resources->Network."
   echo "Enable 'Use kernel networking for UDP' in Docker Desktop."
-  echo "Or we do it here."
-  read -p "Do you want to set kernelForUDP to true? (y/n): " CHOICE
-
-  if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
-    echo Updating settings file: "$SETTINGS_FILE".
-    sed -i '' 's/"kernelForUDP": false/"kernelForUDP": true/' "$SETTINGS_FILE"
-    read -p "Please shutdown Docker Desktop and restart (Not Restart) for settings to take effect; done? (y/n): " CHOICE
-    if [[ "$CHOICE" == "y" || "$CHOICE" == "Y" ]]; then
-      echo "Continuing..."
-    else
-      echo "Exiting..."
-      exit 0
-    fi
-  else
-    echo "Exiting..."
-    exit 0
-  fi
+  exit 1
 fi
 
 # Get IP of eth1 from BusyBox container with NET_ADMIN privileges
