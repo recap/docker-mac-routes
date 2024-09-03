@@ -8,7 +8,6 @@ The purpose of this script is to be as simple as possible and to have no extra d
 ## Script steps
 
 - Initial checks that Docker and Docker Desktop is installed.
-- Check that `kernelForUDP` is `true` in `~//Library/Group Containers/group.com.docker/settings.json`
 - Run a `busybox` container with `NET_ADMIN` privileges to query the IP of `eth1`.
 - Query Docker networks.
 - Add a route for every Docker network.
