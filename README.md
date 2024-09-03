@@ -16,7 +16,8 @@ The purpose of this script is to be as simple as possible and to have no extra d
 ## How to run
 
 Enable "kernel networking for UDP" in Docker Desktop from Settings->Resources->Network.
-[docker](./docker-desktop.png)
+
+[![docker](./docker-desktop.png)]
 
 ```bash
 git clone https://github.com/recap/docker-mac-routes.git
