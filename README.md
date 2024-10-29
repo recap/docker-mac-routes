@@ -38,14 +38,13 @@ Run a NGINX container and grab its container IP
 
 ```bash
 docker run --rm --name test_nginx -d nginx
-TEST_IP=`docker inspect test_nginx --format '{{.NetworkSettings.IPAddress}}'`
-echo $TEST_IP
+docker inspect test_nginx --format '{{.NetworkSettings.IPAddress}}'
 ```
 
 Check if NGINX is reachable.
 
 ```bash
-curl -I $TEST_IP
+curl -I [container_ip]
 ```
 
 Stop container
