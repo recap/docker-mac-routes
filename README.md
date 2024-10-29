@@ -43,7 +43,7 @@ bash docker-mac-routes-add.sh
 To check routes to a particular subnet on MacOS use `netstat` and grep for your subnets e.g.
 
 ```bash
-netstat -nr | grep 172.17                                                                                                                                                                                                             (base)
+netstat -nr | grep 172
 ```
 
 ## Test connectivity
