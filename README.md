@@ -17,11 +17,25 @@ The purpose of this script is to be as simple as possible and to have no extra d
 Enable "kernel networking for UDP" in Docker Desktop from Settings->Resources->Network.
 
 ![docker](./docker-desktop.png)
+Run instantly with `curl` or `wget`:
 
 ```bash
-git clone https://github.com/recap/docker-mac-routes.git
-cd docker-mac-routes
-./docker-mac-routes-add.sh
+curl -o- https://raw.githubusercontent.com/recap/docker-mac-routes/refs/tags/v0.1.0/docker-mac-routes-add.sh | bash
+```
+
+```bash
+wget -qO- https://raw.githubusercontent.com/recap/docker-mac-routes/refs/tags/v0.1.0/docker-mac-routes-add.sh | bash
+
+```
+
+Or download the script and run it:
+
+```bash
+curl  -L https://github.com/recap/docker-mac-routes/archive/refs/tags/v0.1.0.tar.gz -o docker-mac-routes-0.1.0.tar.gz
+tar -zxvf docker-mac-routes-0.1.0.tar.gz
+cd docker-mac-routes-0.1.0
+bash docker-mac-routes-add.sh
+
 ```
 
 ## Check routes
