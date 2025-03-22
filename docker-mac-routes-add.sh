@@ -8,7 +8,27 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 1
 fi
 
-echo "This tool supports Docker Desktop versions >= 4.26"
+# Extract Docker Desktop version
+DOCKER_VERSION=$(docker version | grep 'Server: Docker Desktop' | awk '{print $4}')
+
+
+# Function to compare versions
+docker_version_gte() {
+    printf '%s\n%s' "$1" "$2" | sort -V | head -n1 | grep -q "$2"
+}
+
+
+MIN_REQUIRED_VERSION="4.26.0"
+BREAKING_REQUIRED_VERSION="4.39.0"
+
+
+if docker_version_gte "$DOCKER_VERSION" "$MIN_REQUIRED_VERSION"; then
+    echo "Docker version $DOCKER_VERSION is >= $MIN_REQUIRED_VERSION ✅"
+else
+    echo "Docker version $DOCKER_VERSION is < $MIN_REQUIRED_VERSION ❌"
+    exit 1
+fi
+
 
 # Check if Docker Desktop is running
 docker ps > /dev/null
