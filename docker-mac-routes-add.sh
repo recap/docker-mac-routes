@@ -94,7 +94,10 @@ for NETWORK_ID in $NETWORKS; do
     # Check and Add/Remove Routes on macOS
 
     for SUBNET in $SUBNETS; do
+      # Checking if iptables is dropping packets for the subnet. If so, remove the rule.
+      # This is required for Docker Desktop versions >= 4.39.0
       if docker_version_gte "$DOCKER_VERSION" "$BREAKING_VERSION"; then
+        echo "Checking for iptables blocking rule for subnet $SUBNET..."
         # Get the interface in the Docker VM associated with the subnet
         NETWORK="${SUBNET%%/*}"
         DOCKER_CMD="route -n | grep "$NETWORK" | awk '{print \$8}'"
