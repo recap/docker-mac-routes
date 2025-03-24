@@ -99,21 +99,18 @@ for NETWORK_ID in $NETWORKS; do
         NETWORK="${SUBNET%%/*}"
         DOCKER_CMD="route -n | grep "$NETWORK" | awk '{print \$8}'"
         INTERFACE=$(docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$DOCKER_CMD")
-        echo "Interface for subnet $SUBNET: $INTERFACE"
+        # echo "Interface for subnet $SUBNET: $INTERFACE"
         IPTABLES_RULE="DOCKER ! -i $INTERFACE -o $INTERFACE -j DROP"
-        echo "IPTABLES rule for subnet $SUBNET: $IPTABLES_RULE"
+        # echo "IPTABLES rule for subnet $SUBNET: $IPTABLES_RULE"
         RULE_EXISTS_CMD="iptables -C $IPTABLES_RULE 2>/dev/null"
         if docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$RULE_EXISTS_CMD"; then
-          echo "Docker iptables rule already exists for subnet $SUBNET"
+          echo "Iptables DROP rule found in Docker VM for subnet $SUBNET"
+          echo "Removing iptables DROP rule from Docker VM..."
+          DROP_RULE_CMD="iptables -D $IPTABLES_RULE"
+          docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$DROP_RULE_CMD"
         else
-          echo "Docker iptables rule does NOT exist for subnet $SUBNET"
+          echo "Iptables DROP rule NOT found in Docker VM for subnet $SUBNET"
         fi
-        # RULE_EXISTS=$(docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$RULE_EXISTS_CMD")
-        # echo "Sdfsdf: $RULE_EXISTS"
-        # if $RULE_EXISTS; then
-        #   echo "Docker iptables rule already exists for subnet $SUBNET:"
-        # fi
-        
       fi
       # Check if the route already exists
       echo "Checking for local routes already setup for subnet $SUBNET..."
