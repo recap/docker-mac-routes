@@ -11,6 +11,14 @@ The purpose of this script is to be as simple as possible and to have no extra d
 - Query Docker networks.
 - Add a route for every Docker network.
 
+### Note for Docker Desktop versions >= 4.39.0
+
+Since version 4.39.0, Docker Desktop introduces `iptable` rules that block traffic from MacOS to containers. To fix this I introduce a few more steps in the script:
+
+- Check for Docker Desktop version.
+- Build an Alpine docker image with `iptables` installed.
+- For every Docker network, check for `iptables` rules and remove the `DROP` rule that blocks traffic from MacOS to containers.
+
 ## How to run
 
 Enable "kernel networking for UDP" in Docker Desktop from Settings->Resources->Network.

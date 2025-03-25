@@ -8,7 +8,27 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 1
 fi
 
-echo "This tool supports Docker Desktop versions >= 4.26"
+# Extract Docker Desktop version
+DOCKER_VERSION=$(docker version | grep 'Server: Docker Desktop' | awk '{print $4}')
+
+
+# Function to compare versions
+docker_version_gte() {
+    printf '%s\n%s' "$1" "$2" | sort -V | head -n1 | grep -q "$2"
+}
+
+
+MIN_REQUIRED_VERSION="4.26.0"
+BREAKING_VERSION="4.39.0"
+
+
+if docker_version_gte "$DOCKER_VERSION" "$MIN_REQUIRED_VERSION"; then
+    echo "Docker version $DOCKER_VERSION is >= $MIN_REQUIRED_VERSION ✅"
+else
+    echo "Docker version $DOCKER_VERSION is < $MIN_REQUIRED_VERSION ❌"
+    exit 1
+fi
+
 
 # Check if Docker Desktop is running
 docker ps > /dev/null
@@ -22,13 +42,21 @@ fi
 # Define the Docker command to get the IP address of eth1
 DOCKER_COMMAND="ip addr show eth1 | grep 'inet ' | awk '{print \$2}' | cut -d/ -f1"
 
+if docker_version_gte "$DOCKER_VERSION" "$BREAKING_VERSION"; then
+  echo "Building Alpine Docker image..."
+  docker build -t alpine-net-tools .
+  DOCKER_IMAGE="alpine-net-tools"
+else
+  echo "Pulling BusyBox Docker image..."
+  docker pull busybox:latest
+  DOCKER_IMAGE="busybox:latest"
+fi
+
 # Pull the BusyBox image if not already pulled
-echo "Pulling BusyBox Docker image..."
-docker pull busybox:latest
 
 # Run the BusyBox container with network privileges (NET_ADMIN) and execute the command
 echo "Running BusyBox container with network privileges (NET_ADMIN) to get IP address of eth1..."
-IP_ADDRESS=$(docker run --rm --network host --cap-add NET_ADMIN busybox:latest sh -c "$DOCKER_COMMAND")
+IP_ADDRESS=$(docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$DOCKER_COMMAND")
 
 # Check if the IP address was successfully retrieved
 if [ -n "$IP_ADDRESS" ]; then
@@ -54,6 +82,7 @@ for NETWORK_ID in $NETWORKS; do
   # Inspect the network and extract the subnet information
   SUBNETS=$(docker network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "$NETWORK_ID")
 
+
   # Get the network name for display purposes
   NETWORK_NAME=$(docker network inspect --format '{{.Name}}' "$NETWORK_ID")
 
@@ -65,8 +94,29 @@ for NETWORK_ID in $NETWORKS; do
     # Check and Add/Remove Routes on macOS
 
     for SUBNET in $SUBNETS; do
+      # Checking if iptables is dropping packets for the subnet. If so, remove the rule.
+      # This is required for Docker Desktop versions >= 4.39.0
+      if docker_version_gte "$DOCKER_VERSION" "$BREAKING_VERSION"; then
+        echo "Checking for iptables blocking rule for subnet $SUBNET..."
+        # Get the interface in the Docker VM associated with the subnet
+        NETWORK="${SUBNET%%/*}"
+        DOCKER_CMD="route -n | grep "$NETWORK" | awk '{print \$8}'"
+        INTERFACE=$(docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$DOCKER_CMD")
+        # echo "Interface for subnet $SUBNET: $INTERFACE"
+        IPTABLES_RULE="DOCKER ! -i $INTERFACE -o $INTERFACE -j DROP"
+        # echo "IPTABLES rule for subnet $SUBNET: $IPTABLES_RULE"
+        RULE_EXISTS_CMD="iptables -C $IPTABLES_RULE 2>/dev/null"
+        if docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$RULE_EXISTS_CMD"; then
+          echo "Iptables DROP rule found in Docker VM for subnet $SUBNET"
+          echo "Removing iptables DROP rule from Docker VM..."
+          DROP_RULE_CMD="iptables -D $IPTABLES_RULE"
+          docker run --rm --network host --cap-add NET_ADMIN $DOCKER_IMAGE sh -c "$DROP_RULE_CMD"
+        else
+          echo "Iptables DROP rule NOT found in Docker VM for subnet $SUBNET"
+        fi
+      fi
       # Check if the route already exists
-      echo "Checking for local routes already setup..."
+      echo "Checking for local routes already setup for subnet $SUBNET..."
       EXISTING_ROUTE=$(route -n get "$SUBNET" | grep destination: | grep -v default)
 
       if [ -n "$EXISTING_ROUTE" ]; then
@@ -93,6 +143,8 @@ for NETWORK_ID in $NETWORKS; do
           continue
         fi
       fi
+
+      
 
       # Add the new route for the subnet to the IP_ADDRESS
       echo "[NEED SUDO RIGHTS] Adding route to subnet $SUBNET via $IP_ADDRESS..."
