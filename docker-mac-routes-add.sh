@@ -44,7 +44,14 @@ DOCKER_COMMAND="ip addr show eth1 | grep 'inet ' | awk '{print \$2}' | cut -d/ -
 
 if docker_version_gte "$DOCKER_VERSION" "$BREAKING_VERSION"; then
   echo "Building Alpine Docker image..."
-  docker build -t alpine-net-tools .
+  DOCKERFILE='
+  FROM alpine:latest
+  RUN apk add --no-cache iptables iproute2 net-tools iputils dnsmasq tcpdump socat curl wget nmap bind-tools && rm -rf /var/cache/apk/*
+  CMD ["sh"]' 
+  
+
+  echo "$DOCKERFILE" | docker build -t alpine-net-tools -f - .
+
   DOCKER_IMAGE="alpine-net-tools"
 else
   echo "Pulling BusyBox Docker image..."
