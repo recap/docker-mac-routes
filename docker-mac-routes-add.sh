@@ -8,19 +8,23 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 1
 fi
 
+# Check if Docker Desktop is running
+docker ps > /dev/null
+if [ $? -ne 0 ]; then
+  echoerr "Error with finding local Docker. Make sure Docker cli and Docker Desktop are installed."
+  exit 1
+fi
+
+MIN_REQUIRED_VERSION="4.26.0"
+BREAKING_VERSION="4.39.0"
+
 # Extract Docker Desktop version
 DOCKER_VERSION=$(docker version | grep 'Server: Docker Desktop' | awk '{print $4}')
-
 
 # Function to compare versions
 docker_version_gte() {
     printf '%s\n%s' "$1" "$2" | sort -V | head -n1 | grep -q "$2"
 }
-
-
-MIN_REQUIRED_VERSION="4.26.0"
-BREAKING_VERSION="4.39.0"
-
 
 if docker_version_gte "$DOCKER_VERSION" "$MIN_REQUIRED_VERSION"; then
     echo "Docker version $DOCKER_VERSION is >= $MIN_REQUIRED_VERSION ✅"
@@ -29,37 +33,26 @@ else
     exit 1
 fi
 
-
-# Check if Docker Desktop is running
-docker ps > /dev/null
-if [ $? -ne 0 ]; then
-  echoerr "Error with finding local Docker. Make sure Docker cli and Docker Desktop are installed."
-  exit 1
-fi
-
-
 # Get IP of eth1 from BusyBox container with NET_ADMIN privileges
 # Define the Docker command to get the IP address of eth1
 DOCKER_COMMAND="ip addr show eth1 | grep 'inet ' | awk '{print \$2}' | cut -d/ -f1"
 
 if docker_version_gte "$DOCKER_VERSION" "$BREAKING_VERSION"; then
   echo "Building Alpine Docker image..."
+  # Build a custom Alpine Docker image with required tools
   DOCKERFILE='
   FROM alpine:latest
   RUN apk add --no-cache iptables iproute2 net-tools iputils dnsmasq tcpdump socat curl wget nmap bind-tools && rm -rf /var/cache/apk/*
   CMD ["sh"]' 
-  
 
   echo "$DOCKERFILE" | docker build -t alpine-net-tools -f - .
-
   DOCKER_IMAGE="alpine-net-tools"
 else
+  # Pull the BusyBox image if not already pulled
   echo "Pulling BusyBox Docker image..."
   docker pull busybox:latest
   DOCKER_IMAGE="busybox:latest"
 fi
-
-# Pull the BusyBox image if not already pulled
 
 # Run the BusyBox container with network privileges (NET_ADMIN) and execute the command
 echo "Running BusyBox container with network privileges (NET_ADMIN) to get IP address of eth1..."
@@ -78,7 +71,6 @@ else
 fi
 
 # List Docker networks with 'bridge' driver and display their subnets
-
 echo "Listing Docker networks with 'bridge' driver and their subnets..."
 
 # Get a list of all Docker networks with the 'bridge' driver
@@ -89,7 +81,6 @@ for NETWORK_ID in $NETWORKS; do
   # Inspect the network and extract the subnet information
   SUBNETS=$(docker network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "$NETWORK_ID")
 
-
   # Get the network name for display purposes
   NETWORK_NAME=$(docker network inspect --format '{{.Name}}' "$NETWORK_ID")
 
@@ -99,7 +90,6 @@ for NETWORK_ID in $NETWORKS; do
     echo "  Subnet(s): $SUBNETS"
 
     # Check and Add/Remove Routes on macOS
-
     for SUBNET in $SUBNETS; do
       # Checking if iptables is dropping packets for the subnet. If so, remove the rule.
       # This is required for Docker Desktop versions >= 4.39.0
@@ -151,8 +141,6 @@ for NETWORK_ID in $NETWORKS; do
         fi
       fi
 
-      
-
       # Add the new route for the subnet to the IP_ADDRESS
       echo "[NEED SUDO RIGHTS] Adding route to subnet $SUBNET via $IP_ADDRESS..."
       sudo route -n add -net $SUBNET $IP_ADDRESS
@@ -162,4 +150,3 @@ for NETWORK_ID in $NETWORKS; do
   fi
   echo "Done."
 done
-
