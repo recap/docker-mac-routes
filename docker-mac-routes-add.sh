@@ -15,6 +15,23 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+if [ "$1" == "test" ]; then
+  echo "Testing Docker host to container network..."
+  docker run --rm --name test_nginx -d nginx > /dev/null
+  sleep 1
+  NGINX_IP=$(docker inspect test_nginx --format '{{.NetworkSettings.IPAddress}}')
+  curl --silent --output /dev/null -I $NGINX_IP:80
+  if [ $? -eq 0 ]; then
+    docker stop test_nginx > /dev/null
+    echo "Host to container networking works! ✅"
+    exit 0
+  else
+    docker stop test_nginx > /dev/null
+    echo "Host to container networking does NOT work! ❌"
+    exit 1
+  fi
+fi
+
 MIN_REQUIRED_VERSION="4.26.0"
 BREAKING_VERSION="4.39.0"
 
