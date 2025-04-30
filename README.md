@@ -44,15 +44,23 @@ bash docker-mac-routes-add.sh
 
 ```
 
-## Check routes
+## Test connectivity automatically
+
+To test if host to container connectivity is working, run:
+
+```bash
+bash docker-mac-routes-test.sh test
+```
+
+This `test` script will automate the below steps.
+
+## Test connectivity manually
 
 To check routes to a particular subnet on MacOS use `netstat` and grep for your subnets e.g.
 
 ```bash
 netstat -nr | grep 172
 ```
-
-## Test connectivity
 
 Run a NGINX container and grab its container IP
 
