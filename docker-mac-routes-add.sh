@@ -20,7 +20,7 @@ if [ "$1" == "test" ]; then
   docker run --rm --name test_nginx -d nginx > /dev/null
   sleep 1
   NGINX_IP=$(docker inspect test_nginx --format '{{.NetworkSettings.IPAddress}}')
-  curl --silent --output /dev/null -I $NGINX_IP:80
+  curl -m 2 --silent --output /dev/null -I $NGINX_IP:80
   if [ $? -eq 0 ]; then
     docker stop test_nginx > /dev/null
     echo "Host to container networking works! ✅"
