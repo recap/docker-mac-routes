@@ -4,7 +4,7 @@ Routes IP traffic from MacOS host to docker containers in Docker Desktop. This s
 
 The purpose of this script is to be as simple as possible and to have no extra dependencies; being pure Bash and relying on standard cli tools only. Sudo rights are only asked for specific `route` commands and not the whole script.
 
-## Latest version tested
+## Latest Docker desktop version tested
 
 4.50.0
 
