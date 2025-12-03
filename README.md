@@ -70,7 +70,7 @@ Run a NGINX container and grab its container IP
 
 ```bash
 docker run --rm --name test_nginx -d nginx
-docker inspect test_nginx --format '{{.NetworkSettings.IPAddress}}'
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' test_nginx
 ```
 
 Check if NGINX is reachable.
