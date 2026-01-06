@@ -97,7 +97,7 @@ NETWORKS=$(docker network ls --filter driver=bridge --format "{{.ID}}")
 # Iterate over each network and get its subnet
 for NETWORK_ID in $NETWORKS; do
   # Inspect the network and extract the subnet information
-  SUBNETS=$(docker network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "$NETWORK_ID")
+  SUBNETS=$(docker network inspect --format '{{range .IPAM.Config}} {{.Subnet}}{{end}}' "$NETWORK_ID")
 
   # Get the network name for display purposes
   NETWORK_NAME=$(docker network inspect --format '{{.Name}}' "$NETWORK_ID")
