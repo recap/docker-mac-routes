@@ -6,7 +6,8 @@ The purpose of this script is to be as simple as possible and to have no extra d
 
 ## Latest Docker desktop version tested
 
-4.53.0
+- 4.53.0
+- 4.63.0
 
 ## Script steps
 
