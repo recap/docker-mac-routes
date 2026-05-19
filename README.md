@@ -9,6 +9,7 @@ The purpose of this script is to be as simple as possible and to have no extra d
 - 4.53.0
 - 4.63.0
 - 4.69.0
+- 4.73.0
 
 ## Script steps
 
